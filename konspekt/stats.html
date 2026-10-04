@@ -1,0 +1,215 @@
+<!doctype html>
+<!-- © 2026 Конспект (pogost). Все права защищены. Копирование и использование кода без письменного разрешения запрещено. -->
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Статистика · Конспект</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Статистика">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<style>
+:root{
+--bg:#F5F5F7; --card:#FFFFFF; --text:#1D1D1F; --muted:#6E6E73; --line:#E5E5EA; --fill:#E8E8ED;
+--accent:#0066CC; --bar:#0A6CFF; --bar-dim:#B7D3FA; --grid:#E5E5EA; --pro:#FFD60A;
+}
+@media (prefers-color-scheme: dark){
+:root{ --bg:#000000; --card:#1C1C1E; --text:#F5F5F7; --muted:#98989D; --line:#38383A; --fill:#2C2C2E;
+--accent:#4DA3FF; --bar:#4DA3FF; --bar-dim:#1E3A5F; --grid:#2C2C2E; }
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",sans-serif;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;margin:0;cursor:pointer}
+.wrap{max-width:720px;margin:0 auto;padding:calc(env(safe-area-inset-top) + 20px) 20px calc(env(safe-area-inset-bottom) + 40px)}
+.top{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+.eyebrow{font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+h1{margin:2px 0 0;font-size:34px;line-height:41px;font-weight:700;letter-spacing:-.02em}
+h2{margin:28px 0 10px;font-size:22px;font-weight:700;letter-spacing:-.01em}
+.refresh{display:flex;align-items:center;gap:6px;min-height:44px;padding:0 4px;color:var(--accent);font-size:17px}
+.updated{font-size:13px;color:var(--muted);margin-top:6px}
+.tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:20px}
+.tile{background:var(--card);border-radius:18px;padding:16px}
+.tile .label{font-size:14px;color:var(--muted)}
+.tile .value{font-size:34px;line-height:40px;font-weight:700;letter-spacing:-.02em;margin-top:6px;font-variant-numeric:tabular-nums}
+.tile .sub{font-size:13px;color:var(--muted);margin-top:2px}
+.card{background:var(--card);border-radius:18px;padding:16px}
+.seg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));padding:3px;background:var(--fill);border-radius:10px;margin-bottom:14px}
+.seg button{height:32px;border-radius:8px;font-size:14px;font-weight:600}
+.seg button[aria-pressed="true"]{background:var(--card);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.chart-title{font-size:15px;font-weight:600}
+.chart-sub{font-size:13px;color:var(--muted);margin-top:2px}
+.chart{position:relative;height:180px;margin-top:16px;display:flex;align-items:flex-end;gap:2px;border-bottom:1px solid var(--grid)}
+.col{flex:1;height:100%;display:flex;align-items:flex-end;justify-content:center;position:relative}
+.col .bar{width:100%;max-width:28px;border-radius:4px 4px 0 0;background:var(--bar);min-height:2px}
+.col.zero .bar{background:var(--grid)}
+.col:hover .bar,.col:focus .bar{filter:brightness(1.12)}
+.col:focus{outline:none}
+.gridline{position:absolute;left:0;right:0;border-top:1px dashed var(--grid);pointer-events:none}
+.gridlabel{position:absolute;right:0;transform:translateY(-120%);font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.xlabels{display:flex;gap:2px;margin-top:6px}
+.xlabels span{flex:1;text-align:center;font-size:11px;color:var(--muted);white-space:nowrap}
+.tip{position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);font-size:13px;line-height:17px;padding:6px 10px;border-radius:8px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .12s;z-index:2}
+.col:hover .tip,.col:focus .tip{opacity:1}
+.list{background:var(--card);border-radius:18px;overflow:hidden}
+.row{display:flex;align-items:center;gap:14px;padding:14px 16px;min-height:60px}
+.row + .row{border-top:.5px solid var(--line)}
+.row .ic{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex:none;background:var(--fill);color:var(--text)}
+.row .name{flex:1;font-size:16px}
+.row .name small{display:block;font-size:13px;color:var(--muted);margin-top:2px}
+.row .num{font-size:17px;font-weight:600;font-variant-numeric:tabular-nums;text-align:right}
+.row .num small{display:block;font-size:12px;font-weight:400;color:var(--muted)}
+.row.pro .ic{background:var(--pro);color:#1D1D1F}
+.note{font-size:13px;line-height:18px;color:var(--muted);margin-top:14px}
+.switch{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--card);border-radius:18px;padding:14px 16px;margin-top:28px}
+.switch input{width:51px;height:31px;appearance:none;-webkit-appearance:none;background:var(--fill);border-radius:16px;position:relative;cursor:pointer;flex:none;transition:background .15s}
+.switch input::after{content:"";position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:14px;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,.2);transition:transform .15s}
+.switch input:checked{background:#34C759}
+.switch input:checked::after{transform:translateX(20px)}
+.error{background:#FFF6D9;color:#5C4A00;border-radius:12px;padding:12px 14px;font-size:14px;margin-top:16px}
+.skeleton{color:transparent!important;background:var(--fill);border-radius:8px}
+table.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+</style>
+</head>
+<body>
+<main class="wrap">
+<div class="top">
+<div>
+<div class="eyebrow">Конспект</div>
+<h1>Статистика</h1>
+</div>
+<button class="refresh" id="refresh" aria-label="Обновить">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg>
+Обновить
+</button>
+</div>
+<div class="updated" id="updated">Загрузка…</div>
+<div id="err"></div>
+<div class="tiles">
+<div class="tile"><div class="label">Люди сегодня</div><div class="value skeleton" id="kUsersToday">00</div><div class="sub" id="kUsersDelta">&nbsp;</div></div>
+<div class="tile"><div class="label">Заходы сегодня</div><div class="value skeleton" id="kVisitsToday">00</div><div class="sub" id="kVisitsDelta">&nbsp;</div></div>
+<div class="tile"><div class="label">Всего людей</div><div class="value skeleton" id="kUsersTotal">00</div><div class="sub">с запуска</div></div>
+<div class="tile"><div class="label">Всего заходов</div><div class="value skeleton" id="kVisitsTotal">00</div><div class="sub">с запуска</div></div>
+</div>
+<h2>За 14 дней</h2>
+<div class="card">
+<div class="seg" role="group" aria-label="Показатель">
+<button id="mUsers" aria-pressed="true">Люди</button>
+<button id="mVisits" aria-pressed="false">Заходы</button>
+</div>
+<div class="chart-title" id="chartTitle">Люди по дням</div>
+<div class="chart-sub" id="chartSub">&nbsp;</div>
+<div class="chart" id="chart" role="img" aria-label="Столбчатая диаграмма по дням"></div>
+<div class="xlabels" id="xlabels"></div>
+<table class="sr" id="table"></table>
+</div>
+<h2>Что делают в приложении</h2>
+<div class="list" id="events"></div>
+<div class="note">Счётчики анонимные: без cookies, имён и текстов конспектов. «Люди» считаются по устройству — один человек с телефона и ноутбука будет посчитан дважды. Счёт идёт с момента обновления приложения, по московскому времени.</div>
+<label class="switch">
+<span><b style="font-weight:600">Не считать меня</b><br><span style="font-size:13px;color:var(--muted)">Ваши заходы с этого устройства не попадут в статистику</span></span>
+<input type="checkbox" id="me">
+</label>
+</main>
+<script>
+'use strict';
+const API = 'https://abacus.jasoncameron.dev', NS = 'konspekt-pogost-7q2';
+const EVENTS = [
+{ id: 'note', name: 'Создано конспектов', icon: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/>' },
+{ id: 'file', name: 'Из загруженных файлов', icon: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M12 18v-6M9 14.5l3-3 3 3"/>' },
+{ id: 'study', name: 'Сессий повторения', icon: '<rect x="3" y="6" width="14" height="14" rx="2"/><path d="M7 3h12a2 2 0 0 1 2 2v12"/>' },
+{ id: 'pro', name: 'Нажали «Хочу Pro»', icon: '<path d="M12 3l2.6 5.6 6.1.7-4.5 4.1 1.2 6L12 16.9 6.6 19.4l1.2-6L3.3 9.3l6.1-.7z"/>', pro: true }
+];
+const $ = (id) => document.getElementById(id);
+const fmt = new Intl.NumberFormat('ru-RU');
+let metric = 'users', data = null;
+function dayKeys(n) {
+const out = [], tz = 'Europe/Moscow';
+for (let i = n - 1; i >= 0; i--) {
+const d = new Date(Date.now() - i * 86400000);
+const key = new Intl.DateTimeFormat('sv-SE', { timeZone: tz }).format(d).replace(/-/g, '');
+const label = new Intl.DateTimeFormat('ru-RU', { timeZone: tz, day: 'numeric', month: 'short' }).format(d).replace('.', '');
+const wd = new Intl.DateTimeFormat('ru-RU', { timeZone: tz, weekday: 'short' }).format(d);
+out.push({ key, label, wd });
+}
+return out;
+}
+async function get(key) {
+const r = await fetch(API + '/get/' + NS + '/' + key, { cache: 'no-store' });
+if (r.status === 404) return 0;
+if (!r.ok) throw new Error('http ' + r.status);
+const j = await r.json(); return j.value || 0;
+}
+async function load() {
+$('err').innerHTML = '';
+$('updated').textContent = 'Загрузка…';
+const days = dayKeys(14);
+try {
+const [users, visits, totals, events] = await Promise.all([
+Promise.all(days.map((d) => get('users-' + d.key))),
+Promise.all(days.map((d) => get('visits-' + d.key))),
+Promise.all([get('users-total'), get('visits-total')]),
+Promise.all(EVENTS.map((e) => Promise.all([get('ev-' + e.id + '-' + days[13].key), get('ev-' + e.id + '-total')])))
+]);
+data = { days, users, visits, totals, events };
+render();
+$('updated').textContent = 'Обновлено в ' + new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+} catch (e) {
+$('updated').textContent = '';
+$('err').innerHTML = '<div class="error">Не удалось получить данные. Проверьте интернет и нажмите «Обновить».</div>';
+}
+}
+function delta(today, yesterday) {
+if (!yesterday && !today) return 'вчера: 0';
+return 'вчера: ' + fmt.format(yesterday);
+}
+function render() {
+const { days, users, visits, totals, events } = data;
+const set = (id, v) => { const el = $(id); el.textContent = fmt.format(v); el.classList.remove('skeleton'); };
+set('kUsersToday', users[13]); set('kVisitsToday', visits[13]);
+set('kUsersTotal', totals[0]); set('kVisitsTotal', totals[1]);
+$('kUsersDelta').textContent = delta(users[13], users[12]);
+$('kVisitsDelta').textContent = delta(visits[13], visits[12]);
+const series = metric === 'users' ? users : visits;
+const word = metric === 'users' ? ['человек', 'человека', 'человек'] : ['заход', 'захода', 'заходов'];
+const pl = (n) => { const a = n % 10, b = n % 100; return fmt.format(n) + ' ' + (a === 1 && b !== 11 ? word[0] : a >= 2 && a <= 4 && (b < 12 || b > 14) ? word[1] : word[2]); };
+const sum = series.reduce((a, b) => a + b, 0);
+$('chartTitle').textContent = metric === 'users' ? 'Люди по дням' : 'Заходы по дням';
+$('chartSub').textContent = 'Всего за 14 дней: ' + pl(sum);
+const max = Math.max(1, ...series);
+const step = niceStep(max);
+const top = Math.ceil(max / step) * step;
+let grid = '';
+for (let v = step; v <= top; v += step) grid += `<div class="gridline" style="bottom:${(v / top) * 100}%"><span class="gridlabel">${fmt.format(v)}</span></div>`;
+$('chart').innerHTML = grid + series.map((v, i) => `<div class="col${v ? '' : ' zero'}" tabindex="0" aria-label="${days[i].label}: ${pl(v)}">
+<div class="bar" style="height:${v ? Math.max(2, (v / top) * 100) : 1.2}%"></div>
+<div class="tip">${days[i].wd}, ${days[i].label}<br><b>${pl(v)}</b></div></div>`).join('');
+$('xlabels').innerHTML = days.map((d, i) => `<span>${i % 2 === 1 || i === 13 ? d.label.split(' ')[0] : ''}</span>`).join('');
+$('table').innerHTML = '<tr><th>День</th><th>Люди</th><th>Заходы</th></tr>' + days.map((d, i) => `<tr><td>${d.label}</td><td>${users[i]}</td><td>${visits[i]}</td></tr>`).join('');
+const totalUsers = totals[0];
+$('events').innerHTML = EVENTS.map((e, i) => {
+const [today, total] = events[i];
+const conv = e.pro && totalUsers ? ` · ${Math.round((total / totalUsers) * 1000) / 10}% от всех людей` : '';
+return `<div class="row${e.pro ? ' pro' : ''}">
+<div class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${e.icon}</svg></div>
+<div class="name">${e.name}<small>сегодня: ${fmt.format(today)}${conv}</small></div>
+<div class="num">${fmt.format(total)}<small>всего</small></div></div>`;
+}).join('');
+}
+function niceStep(max) {
+const raw = max / 3, p = Math.pow(10, Math.floor(Math.log10(raw)));
+const n = raw / p;
+return Math.max(1, (n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10) * p);
+}
+$('mUsers').onclick = () => { metric = 'users'; $('mUsers').setAttribute('aria-pressed', 'true'); $('mVisits').setAttribute('aria-pressed', 'false'); if (data) render(); };
+$('mVisits').onclick = () => { metric = 'visits'; $('mVisits').setAttribute('aria-pressed', 'true'); $('mUsers').setAttribute('aria-pressed', 'false'); if (data) render(); };
+$('refresh').onclick = load;
+try { $('me').checked = localStorage.getItem('konspekt-owner') === '1'; } catch (e) {}
+$('me').onchange = (e) => { try { localStorage.setItem('konspekt-owner', e.target.checked ? '1' : '0'); } catch (err) {} };
+load();
+</script>
+</body>
+</html>
