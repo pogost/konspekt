@@ -94,7 +94,7 @@ table.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 
 <div class="tile"><div class="label">Всего людей</div><div class="value skeleton" id="kUsersTotal">00</div><div class="sub">с запуска</div></div>
 <div class="tile"><div class="label">Всего заходов</div><div class="value skeleton" id="kVisitsTotal">00</div><div class="sub">с запуска</div></div>
 </div>
-<h2>За 14 дней</h2>
+<h2>За неделю</h2>
 <div class="card">
 <div class="seg" role="group" aria-label="Показатель">
 <button id="mUsers" aria-pressed="true">Люди</button>
@@ -140,26 +140,29 @@ return out;
 async function get(key) {
 const r = await fetch(API + '/get/' + NS + '/' + key, { cache: 'no-store' });
 if (r.status === 404) return 0;
+if (r.status === 429) throw new Error('rate');
 if (!r.ok) throw new Error('http ' + r.status);
 const j = await r.json(); return j.value || 0;
 }
 async function load() {
+const btn = $('refresh'); if (btn.disabled) return; btn.disabled = true; btn.style.opacity = '.4';
+setTimeout(() => { btn.disabled = false; btn.style.opacity = ''; }, 10000);
 $('err').innerHTML = '';
 $('updated').textContent = 'Загрузка…';
-const days = dayKeys(14);
+const days = dayKeys(7);
 try {
 const [users, visits, totals, events] = await Promise.all([
 Promise.all(days.map((d) => get('users-' + d.key))),
 Promise.all(days.map((d) => get('visits-' + d.key))),
 Promise.all([get('users-total'), get('visits-total')]),
-Promise.all(EVENTS.map((e) => Promise.all([get('ev-' + e.id + '-' + days[13].key), get('ev-' + e.id + '-total')])))
+Promise.all(EVENTS.map((e) => Promise.all([get('ev-' + e.id + '-' + days[6].key), get('ev-' + e.id + '-total')])))
 ]);
 data = { days, users, visits, totals, events };
 render();
 $('updated').textContent = 'Обновлено в ' + new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
 } catch (e) {
 $('updated').textContent = '';
-$('err').innerHTML = '<div class="error">Не удалось получить данные. Проверьте интернет и нажмите «Обновить».</div>';
+$('err').innerHTML = '<div class="error">' + (e.message === 'rate' ? 'Слишком частые обновления. Подождите 10 секунд и нажмите «Обновить».' : 'Не удалось получить данные. Проверьте интернет и нажмите «Обновить».') + '</div>';
 }
 }
 function delta(today, yesterday) {
@@ -169,16 +172,16 @@ return 'вчера: ' + fmt.format(yesterday);
 function render() {
 const { days, users, visits, totals, events } = data;
 const set = (id, v) => { const el = $(id); el.textContent = fmt.format(v); el.classList.remove('skeleton'); };
-set('kUsersToday', users[13]); set('kVisitsToday', visits[13]);
+set('kUsersToday', users[6]); set('kVisitsToday', visits[6]);
 set('kUsersTotal', totals[0]); set('kVisitsTotal', totals[1]);
-$('kUsersDelta').textContent = delta(users[13], users[12]);
-$('kVisitsDelta').textContent = delta(visits[13], visits[12]);
+$('kUsersDelta').textContent = delta(users[6], users[5]);
+$('kVisitsDelta').textContent = delta(visits[6], visits[5]);
 const series = metric === 'users' ? users : visits;
 const word = metric === 'users' ? ['человек', 'человека', 'человек'] : ['заход', 'захода', 'заходов'];
 const pl = (n) => { const a = n % 10, b = n % 100; return fmt.format(n) + ' ' + (a === 1 && b !== 11 ? word[0] : a >= 2 && a <= 4 && (b < 12 || b > 14) ? word[1] : word[2]); };
 const sum = series.reduce((a, b) => a + b, 0);
 $('chartTitle').textContent = metric === 'users' ? 'Люди по дням' : 'Заходы по дням';
-$('chartSub').textContent = 'Всего за 14 дней: ' + pl(sum);
+$('chartSub').textContent = 'Всего за неделю: ' + pl(sum);
 const max = Math.max(1, ...series);
 const step = niceStep(max);
 const top = Math.ceil(max / step) * step;
@@ -187,7 +190,7 @@ for (let v = step; v <= top; v += step) grid += `<div class="gridline" style="bo
 $('chart').innerHTML = grid + series.map((v, i) => `<div class="col${v ? '' : ' zero'}" tabindex="0" aria-label="${days[i].label}: ${pl(v)}">
 <div class="bar" style="height:${v ? Math.max(2, (v / top) * 100) : 1.2}%"></div>
 <div class="tip">${days[i].wd}, ${days[i].label}<br><b>${pl(v)}</b></div></div>`).join('');
-$('xlabels').innerHTML = days.map((d, i) => `<span>${i % 2 === 1 || i === 13 ? d.label.split(' ')[0] : ''}</span>`).join('');
+$('xlabels').innerHTML = days.map((d, i) => `<span>${d.wd}</span>`).join('');
 $('table').innerHTML = '<tr><th>День</th><th>Люди</th><th>Заходы</th></tr>' + days.map((d, i) => `<tr><td>${d.label}</td><td>${users[i]}</td><td>${visits[i]}</td></tr>`).join('');
 const totalUsers = totals[0];
 $('events').innerHTML = EVENTS.map((e, i) => {
